@@ -85,7 +85,7 @@ export default function NewSessionPage() {
                   onChange={e => setSelectedOffer(e.target.value)}
                 >
                   <option value="">— Sélectionner une offre —</option>
-                  {offers.map(o => <option key={o.id} value={o.id}>{o.title}</option>)}
+                  {offers.map(o => <option key={o.id} value={o.id}>{o.job_title || o.title}</option>)}
                 </select>
               </div>
               <div className="flex justify-end">

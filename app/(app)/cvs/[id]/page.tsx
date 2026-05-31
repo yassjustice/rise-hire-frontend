@@ -111,12 +111,14 @@ export default function CVDetailPage() {
               </div>
             </Card>
           )}
-          {cv.languages && cv.languages.length > 0 && (
+          {cv.languages_spoken && cv.languages_spoken.length > 0 && (
             <Card>
               <h3 className="font-semibold text-text-700 mb-3 text-sm uppercase tracking-wider">Langues</h3>
               <div className="flex flex-wrap gap-1.5">
-                {cv.languages.map(l => (
-                  <span key={l} className="bg-bg-50 text-text-500 text-xs px-2 py-1 rounded-full border border-border">{l}</span>
+                {cv.languages_spoken.map(l => (
+                  <span key={l.language} className="bg-bg-50 text-text-500 text-xs px-2 py-1 rounded-full border border-border">
+                    {l.language}{l.level ? ` (${l.level})` : ''}
+                  </span>
                 ))}
               </div>
             </Card>

@@ -135,8 +135,8 @@ export default function DashboardPage() {
               offers.map(offer => (
                 <Link key={offer.id} href={`/offers/${offer.id}`}>
                   <Card className="hover:border-primary/30 transition-colors cursor-pointer">
-                    <p className="font-semibold text-text-900 truncate">{offer.title}</p>
-                    <p className="text-sm text-text-500 mt-1 truncate">{offer.company || 'Entreprise non spécifiée'}</p>
+                    <p className="font-semibold text-text-900 truncate">{offer.job_title || offer.title}</p>
+                    <p className="text-sm text-text-500 mt-1 truncate">{offer.company_name || offer.company || 'Entreprise non spécifiée'}</p>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {offer.required_skills?.slice(0, 3).map(skill => (
                         <span key={skill} className="bg-primary-light text-primary text-xs px-2 py-0.5 rounded-full">{skill}</span>

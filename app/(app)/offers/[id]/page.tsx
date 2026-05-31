@@ -7,6 +7,7 @@ import { api, Offer } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { PageLoader } from '@/components/ui/Spinner';
 
 export default function OfferDetailPage() {
@@ -14,6 +15,10 @@ export default function OfferDetailPage() {
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCompany, setEditCompany] = useState('');
   const { toast } = useToast();
   const router = useRouter();
 
@@ -45,6 +50,28 @@ export default function OfferDetailPage() {
     }
   };
 
+  const startEdit = () => {
+    if (!offer) return;
+    setEditTitle(offer.job_title || offer.title || '');
+    setEditCompany(offer.company_name || offer.company || '');
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!offer) return;
+    setSaving(true);
+    try {
+      const updated = await api.updateOffer(id, { ...offer, job_title: editTitle, company_name: editCompany });
+      setOffer(updated);
+      setEditing(false);
+      toast('Offre mise à jour', 'success');
+    } catch {
+      toast('Erreur lors de la mise à jour', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <PageLoader />;
   if (!offer) return null;
 
@@ -57,18 +84,34 @@ export default function OfferDetailPage() {
       </div>
 
       <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-text-900">{offer.job_title || offer.title}</h1>
-          {(offer.company_name || offer.company) && (
-            <p className="text-text-500 mt-1">🏢 {offer.company_name || offer.company}</p>
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <div className="flex flex-col gap-3 max-w-md">
+              <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Titre du poste" />
+              <Input value={editCompany} onChange={e => setEditCompany(e.target.value)} placeholder="Nom de l'entreprise" />
+              <div className="flex gap-2">
+                <Button onClick={handleSave} loading={saving}>Enregistrer</Button>
+                <Button variant="secondary" onClick={() => setEditing(false)}>Annuler</Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-text-900">{offer.job_title || offer.title}</h1>
+              {(offer.company_name || offer.company) && (
+                <p className="text-text-500 mt-1">🏢 {offer.company_name || offer.company}</p>
+              )}
+            </>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Link href={`/sessions/new?offerId=${offer.id}`}>
-            <Button>🚀 Lancer un scoring</Button>
-          </Link>
-          <Button variant="danger" onClick={handleDelete} loading={deleting}>Supprimer</Button>
-        </div>
+        {!editing && (
+          <div className="flex gap-2 shrink-0">
+            <Button variant="secondary" onClick={startEdit}>✏️ Modifier</Button>
+            <Link href={`/sessions/new?offerId=${offer.id}`}>
+              <Button>🚀 Lancer un scoring</Button>
+            </Link>
+            <Button variant="danger" onClick={handleDelete} loading={deleting}>Supprimer</Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
