@@ -53,13 +53,15 @@ export default function OfferDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link href="/offers" className="text-text-400 hover:text-text-700">← Offres</Link>
         <span className="text-text-300">/</span>
-        <span className="text-text-700 truncate">{offer.title}</span>
+        <span className="text-text-700 truncate">{offer.job_title || offer.title}</span>
       </div>
 
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-text-900">{offer.title}</h1>
-          {offer.company && <p className="text-text-500 mt-1">🏢 {offer.company}</p>}
+          <h1 className="text-2xl font-bold text-text-900">{offer.job_title || offer.title}</h1>
+          {(offer.company_name || offer.company) && (
+            <p className="text-text-500 mt-1">🏢 {offer.company_name || offer.company}</p>
+          )}
         </div>
         <div className="flex gap-2 shrink-0">
           <Link href={`/sessions/new?offerId=${offer.id}`}>

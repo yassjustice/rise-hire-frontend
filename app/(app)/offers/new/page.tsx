@@ -46,7 +46,15 @@ export default function NewOfferPage() {
     if (!title.trim()) { toast('Le titre de l\'offre est requis', 'error'); return; }
     setSaving(true);
     try {
-      await api.createOffer({ title, company, job_description: jdText, ...extracted });
+      // Spread extracted first, then override with user form values so nulls don't win
+      await api.createOffer({
+        ...extracted,
+        job_title: title,
+        title,
+        company_name: company || '',
+        company,
+        job_description: jdText,
+      });
       toast('Offre créée avec succès !', 'success');
       router.push('/offers');
     } catch {

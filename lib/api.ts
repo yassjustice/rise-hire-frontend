@@ -33,23 +33,34 @@ async function request<T>(
   options: RequestInit = {},
   isFormData = false
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: { ...getHeaders(isFormData), ...options.headers },
-  });
+  // Dispatch 'api:slow' after 5s to show cold-start banner
+  const slowTimer = typeof window !== 'undefined'
+    ? setTimeout(() => window.dispatchEvent(new CustomEvent('api:slow')), 5000)
+    : null;
 
-  // Empty body for 204
-  if (res.status === 204) return undefined as T;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: { ...getHeaders(isFormData), ...options.headers },
+    });
 
-  const data = await res.json().catch(() => ({}));
+    // Empty body for 204
+    if (res.status === 204) return undefined as T;
 
-  if (!res.ok) {
-    const msg = getErrorMessage(data, res.status);
-    throw new ApiError(res.status, msg);
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const msg = getErrorMessage(data, res.status);
+      throw new ApiError(res.status, msg);
+    }
+
+    // Unwrap {success, data} envelope
+    return (data?.data !== undefined ? data.data : data) as T;
+  } finally {
+    if (slowTimer) clearTimeout(slowTimer);
+    // Dismiss banner when request finally resolves
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('api:ready'));
   }
-
-  // Unwrap {success, data} envelope
-  return (data?.data !== undefined ? data.data : data) as T;
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
