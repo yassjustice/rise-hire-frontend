@@ -67,7 +67,7 @@ export default function CVDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {cv.experience && cv.experience.length > 0 && (
+          {Array.isArray(cv.experience) && cv.experience.length > 0 && (
             <Card>
               <h2 className="font-semibold text-text-900 mb-4">Expériences professionnelles</h2>
               <div className="space-y-4">
@@ -86,7 +86,7 @@ export default function CVDetailPage() {
             </Card>
           )}
 
-          {cv.education && cv.education.length > 0 && (
+          {Array.isArray(cv.education) && cv.education.length > 0 && (
             <Card>
               <h2 className="font-semibold text-text-900 mb-4">Formation</h2>
               <div className="space-y-3">
@@ -104,7 +104,7 @@ export default function CVDetailPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {cv.skills && cv.skills.length > 0 && (
+          {Array.isArray(cv.skills) && cv.skills.length > 0 && (
             <Card>
               <h3 className="font-semibold text-text-700 mb-3 text-sm uppercase tracking-wider">Compétences</h3>
               <div className="flex flex-wrap gap-1.5">
@@ -114,7 +114,7 @@ export default function CVDetailPage() {
               </div>
             </Card>
           )}
-          {cv.languages_spoken && cv.languages_spoken.length > 0 && (
+          {Array.isArray(cv.languages_spoken) && cv.languages_spoken.length > 0 && (
             <Card>
               <h3 className="font-semibold text-text-700 mb-3 text-sm uppercase tracking-wider">Langues</h3>
               <div className="flex flex-wrap gap-1.5">
