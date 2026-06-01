@@ -8,25 +8,14 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton, Spinner } from '@/components/ui/Spinner';
 import Link from 'next/link';
 
-function CVCard({ cv, selected, onToggle }: { cv: CV; selected: boolean; onToggle: () => void }) {
+function CVCard({ cv }: { cv: CV }) {
   const initials = cv.candidate_name
     ? cv.candidate_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
   return (
-    <div className={`group relative rounded-xl border transition-all ${selected ? 'border-primary shadow-md bg-primary-light/30' : 'border-border hover:border-primary/30 hover:shadow-sm'}`}>
-      <label
-        className="absolute top-2.5 left-2.5 z-10 cursor-pointer"
-        onClick={e => e.stopPropagation()}
-      >
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggle}
-          className={`accent-primary w-4 h-4 cursor-pointer transition-opacity ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-        />
-      </label>
-      <Link href={`/cvs/${cv.id}`} className="block p-4 pl-9">
+    <Link href={`/cvs/${cv.id}`} className="block rounded-xl border border-border hover:border-primary/30 hover:shadow-sm transition-all">
+      <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
             {initials}
@@ -47,8 +36,8 @@ function CVCard({ cv, selected, onToggle }: { cv: CV; selected: boolean; onToggl
             {cv.skills.length > 4 && <span className="text-xs text-text-400">+{cv.skills.length - 4}</span>}
           </div>
         )}
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }
 
@@ -59,8 +48,6 @@ export default function CVsPage() {
   const [dragOver, setDragOver] = useState(false);
   const [search, setSearch] = useState('');
   const [skillFilter, setSkillFilter] = useState<string[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -68,14 +55,12 @@ export default function CVsPage() {
     api.getCVs().then(setCvs).catch(() => toast('Erreur lors du chargement des CVs', 'error')).finally(() => setLoading(false));
   }, [toast]);
 
-  // Top 20 skills by frequency across all CVs
   const topSkills = useMemo(() => {
     const freq: Record<string, number> = {};
     cvs.forEach(cv => Array.isArray(cv.skills) && cv.skills.forEach(s => { freq[s] = (freq[s] || 0) + 1; }));
     return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([s]) => s);
   }, [cvs]);
 
-  // Filtered CVs
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return cvs.filter(cv => {
@@ -87,31 +72,6 @@ export default function CVsPage() {
 
   const toggleSkillFilter = (s: string) =>
     setSkillFilter(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-
-  const toggleSelect = (id: string) =>
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
-      return next;
-    });
-
-  const allFilteredSelected = filtered.length > 0 && filtered.every(cv => selectedIds.has(cv.id));
-  const selectAll = () => setSelectedIds(prev => { const next = new Set(prev); filtered.forEach(cv => next.add(cv.id)); return next; });
-  const clearSelection = () => setSelectedIds(new Set());
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Supprimer ${selectedIds.size} CV(s) ? Cette action est irréversible.`)) return;
-    setDeleting(true);
-    const ids = Array.from(selectedIds);
-    let deleted = 0;
-    for (const id of ids) {
-      try { await api.deleteCV(id); deleted++; } catch { /* skip failed */ }
-    }
-    setCvs(prev => prev.filter(cv => !selectedIds.has(cv.id)));
-    clearSelection();
-    toast(`${deleted} CV(s) supprimé(s)`, 'success');
-    setDeleting(false);
-  };
 
   const uploadFiles = async (files: FileList) => {
     const pdfs = Array.from(files).filter(
@@ -205,29 +165,6 @@ export default function CVsPage() {
         </div>
       )}
 
-      {/* Selection toolbar */}
-      {!loading && filtered.length > 0 && (
-        <div className="flex items-center gap-3 mb-4 min-h-[32px]">
-          <button
-            onClick={allFilteredSelected ? clearSelection : selectAll}
-            className="text-sm text-primary hover:underline"
-          >
-            {allFilteredSelected ? 'Désélectionner tout' : `Tout sélectionner (${filtered.length})`}
-          </button>
-          {selectedIds.size > 0 && (
-            <>
-              <span className="text-text-300 text-sm">|</span>
-              <span className="text-sm text-text-500">{selectedIds.size} sélectionné(s)</span>
-              <div className="ml-auto">
-                <Button variant="danger" onClick={handleBulkDelete} loading={deleting}>
-                  🗑 Supprimer ({selectedIds.size})
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
       {/* CV Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -244,11 +181,14 @@ export default function CVsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(cv => (
-            <CVCard key={cv.id} cv={cv} selected={selectedIds.has(cv.id)} onToggle={() => toggleSelect(cv.id)} />
-          ))}
-        </div>
+        <>
+          <p className="text-sm text-text-400 mb-3">{filtered.length} CV{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map(cv => (
+              <CVCard key={cv.id} cv={cv} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -6,14 +6,12 @@ import Link from 'next/link';
 import { api, CV } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/Spinner';
 
 export default function CVDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [cv, setCv] = useState<CV | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -24,14 +22,6 @@ export default function CVDetailPage() {
   }, [id, toast, router]);
 
   useEffect(() => { load(); }, [load]);
-
-  const handleDelete = async () => {
-    if (!confirm('Supprimer ce CV ?')) return;
-    setDeleting(true);
-    try { await api.deleteCV(id); toast('CV supprimé', 'success'); router.push('/cvs'); }
-    catch { toast('Erreur lors de la suppression', 'error'); }
-    finally { setDeleting(false); }
-  };
 
   if (loading) return <PageLoader />;
   if (!cv) return null;
@@ -48,7 +38,7 @@ export default function CVDetailPage() {
         <span className="text-text-700">{cv.candidate_name || 'Candidat inconnu'}</span>
       </div>
 
-      <div className="flex items-start justify-between gap-4 mb-8">
+      <div className="flex items-start mb-8">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold">
             {initials}
@@ -62,7 +52,6 @@ export default function CVDetailPage() {
             )}
           </div>
         </div>
-        <Button variant="danger" onClick={handleDelete} loading={deleting}>Supprimer</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
