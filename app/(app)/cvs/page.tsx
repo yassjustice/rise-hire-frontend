@@ -20,10 +20,13 @@ function CVCard({ cv }: { cv: CV }) {
           <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
             {initials}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold text-text-900 truncate">{cv.candidate_name || 'Candidat inconnu'}</p>
-            {cv.email && <p className="text-xs text-text-400 truncate">{cv.email}</p>}
+            {cv.candidate_email && <p className="text-xs text-text-400 truncate">{cv.candidate_email}</p>}
           </div>
+          {cv.extraction_status !== 'done' && (
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 shrink-0">⚠️ Extraction</span>
+          )}
         </div>
         {cv.skills && cv.skills.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -51,7 +54,10 @@ export default function CVsPage() {
   }, [toast]);
 
   const uploadFiles = async (files: FileList) => {
-    const pdfs = Array.from(files).filter(f => f.type === 'application/pdf');
+    // Accept by MIME type OR extension (Windows can report PDF as application/octet-stream)
+    const pdfs = Array.from(files).filter(
+      f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
     if (!pdfs.length) { toast('Seuls les fichiers PDF sont acceptés', 'error'); return; }
     setUploading(true);
     let uploaded = 0;
@@ -60,8 +66,9 @@ export default function CVsPage() {
         const cv = await api.uploadCV(file);
         setCvs(prev => [cv, ...prev]);
         uploaded++;
-      } catch {
-        toast(`Erreur avec ${file.name}`, 'error');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+        toast(`Erreur avec ${file.name}: ${msg}`, 'error');
       }
     }
     if (uploaded) toast(`${uploaded} CV(s) importé(s) avec succès`, 'success');

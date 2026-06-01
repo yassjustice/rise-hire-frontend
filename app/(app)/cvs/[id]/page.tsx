@@ -55,8 +55,11 @@ export default function CVDetailPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-text-900">{cv.candidate_name || 'Candidat inconnu'}</h1>
-            {cv.email && <p className="text-text-500">{cv.email}</p>}
-            {cv.phone && <p className="text-text-500">{cv.phone}</p>}
+            {(cv.candidate_email || cv.email) && <p className="text-text-500">{cv.candidate_email || cv.email}</p>}
+            {(cv.candidate_phone || cv.phone) && <p className="text-text-500">{cv.candidate_phone || cv.phone}</p>}
+            {cv.extraction_status !== 'done' && (
+              <span className="inline-block mt-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">⚠️ Extraction incomplète — certaines données peuvent manquer</span>
+            )}
           </div>
         </div>
         <Button variant="danger" onClick={handleDelete} loading={deleting}>Supprimer</Button>
@@ -123,10 +126,10 @@ export default function CVDetailPage() {
               </div>
             </Card>
           )}
-          {cv.location && (
+          {(cv.candidate_location || cv.location) && (
             <Card>
               <h3 className="font-semibold text-text-700 mb-1 text-sm uppercase tracking-wider">Localisation</h3>
-              <p className="text-text-500 text-sm">{cv.location}</p>
+              <p className="text-text-500 text-sm">{cv.candidate_location || cv.location}</p>
             </Card>
           )}
         </div>
