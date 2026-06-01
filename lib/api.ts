@@ -286,6 +286,8 @@ export const sessions = {
 
   get: (id: string) => request<Session>(`/sessions/${id}`),
 
+  delete: (id: string) => request<void>(`/sessions/${id}`, { method: 'DELETE' }),
+
   results: (id: string) => request<ResultRow[]>(`/sessions/${id}/results`),
 
   exportUrl: (id: string) => {
@@ -339,6 +341,7 @@ export const api = {
   // Sessions
   getSessions: sessions.list,
   getSession: sessions.get,
+  deleteSession: sessions.delete,
   createSession: sessions.create,
   startScoring: sessions.score,
   getResults: async (id: string): Promise<SessionResults> => {

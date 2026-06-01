@@ -18,6 +18,17 @@ export default function SessionsPage() {
     api.getSessions().then(setSessions).catch(() => toast('Erreur lors du chargement', 'error')).finally(() => setLoading(false));
   }, [toast]);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer cette session ?')) return;
+    try {
+      await api.deleteSession(id);
+      setSessions(prev => prev.filter(s => s.id !== id));
+      toast('Session supprimée', 'success');
+    } catch {
+      toast('Erreur lors de la suppression', 'error');
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto w-full">
       <div className="flex items-center justify-between mb-8">
@@ -62,12 +73,16 @@ export default function SessionsPage() {
                   <td className="px-4 py-3 text-text-500">{s.cv_count ?? '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                   <td className="px-4 py-3 text-text-400">{formatDate(s.created_at)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right flex items-center justify-end gap-3">
                     {s.status === 'completed' ? (
                       <Link href={`/sessions/${s.id}/results`} className="text-primary text-xs font-medium hover:underline">Voir résultats →</Link>
                     ) : (
                       <Link href={`/sessions/${s.id}`} className="text-text-400 text-xs hover:text-text-700">Détails</Link>
                     )}
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      className="text-text-300 hover:text-danger text-xs hover:underline"
+                    >Supprimer</button>
                   </td>
                 </tr>
               ))}

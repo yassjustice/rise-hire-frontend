@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, Offer, CV, Weights } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
@@ -25,6 +25,11 @@ export default function NewSessionPage() {
   const [selectedCvs, setSelectedCvs] = useState<string[]>([]);
   const [weights, setWeights] = useState<Record<string, number>>({ ...DEFAULT_WEIGHTS });
   const [creating, setCreating] = useState(false);
+
+  // Step 2 filters
+  const [cvSearch, setCvSearch] = useState('');
+  const [skillFilter, setSkillFilter] = useState<string[]>([]);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,6 +38,37 @@ export default function NewSessionPage() {
       .catch(() => toast('Erreur lors du chargement', 'error'))
       .finally(() => setLoadingData(false));
   }, [toast]);
+
+  const topSkills = useMemo(() => {
+    const freq: Record<string, number> = {};
+    cvs.forEach(cv => {
+      if (Array.isArray(cv.skills)) cv.skills.forEach(s => { freq[s] = (freq[s] || 0) + 1; });
+    });
+    return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([s]) => s);
+  }, [cvs]);
+
+  const filteredCvs = useMemo(() => {
+    const q = cvSearch.toLowerCase();
+    return cvs.filter(cv => {
+      const matchSearch = !q ||
+        `${cv.candidate_name ?? ''} ${cv.candidate_email ?? cv.email ?? ''}`.toLowerCase().includes(q);
+      const matchSkill = skillFilter.length === 0 ||
+        (Array.isArray(cv.skills) && skillFilter.some(s => cv.skills.includes(s)));
+      return matchSearch && matchSkill;
+    });
+  }, [cvs, cvSearch, skillFilter]);
+
+  const allFilteredSelected = filteredCvs.length > 0 &&
+    filteredCvs.every(cv => selectedCvs.includes(cv.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedCvs(prev => prev.filter(id => !filteredCvs.some(cv => cv.id === id)));
+    } else {
+      const toAdd = filteredCvs.map(cv => cv.id);
+      setSelectedCvs(prev => Array.from(new Set([...prev, ...toAdd])));
+    }
+  };
 
   const toggleCV = (id: string) =>
     setSelectedCvs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -104,6 +140,40 @@ export default function NewSessionPage() {
             <h2 className="text-xl font-bold text-text-900">Sélectionner les CVs</h2>
             <span className="text-sm text-text-500">{selectedCvs.length} sélectionné(s)</span>
           </div>
+
+          {!loadingData && cvs.length > 0 && (
+            <>
+              <Input
+                placeholder="🔍 Rechercher par nom ou email..."
+                value={cvSearch}
+                onChange={e => setCvSearch(e.target.value)}
+              />
+              {topSkills.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {topSkills.map(skill => (
+                    <button
+                      key={skill}
+                      onClick={() => setSkillFilter(prev => prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill])}
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                        skillFilter.includes(skill)
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-bg-50 text-text-600 border-border hover:border-primary/40'
+                      }`}
+                    >{skill}</button>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <button onClick={toggleSelectAll} className="text-sm text-primary hover:underline">
+                  {allFilteredSelected ? 'Désélectionner tout' : `Tout sélectionner (${filteredCvs.length})`}
+                </button>
+                {(cvSearch || skillFilter.length > 0) && (
+                  <span className="text-xs text-text-400">{filteredCvs.length} sur {cvs.length} CVs</span>
+                )}
+              </div>
+            </>
+          )}
+
           {loadingData ? (
             <div className="flex flex-col gap-3">{Array.from({length:4}).map((_,i) => <Skeleton key={i} className="h-16" />)}</div>
           ) : cvs.length === 0 ? (
@@ -111,9 +181,14 @@ export default function NewSessionPage() {
               <p className="text-3xl mb-2">📄</p>
               <p>Aucun CV disponible. <a href="/cvs" className="text-primary hover:underline">Importez des CVs</a> d&apos;abord.</p>
             </Card>
+          ) : filteredCvs.length === 0 ? (
+            <Card className="text-center text-text-400 py-6">
+              <p className="text-2xl mb-2">🔍</p>
+              <p className="text-sm">Aucun CV ne correspond à ces filtres</p>
+            </Card>
           ) : (
             <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-              {cvs.map(cv => (
+              {filteredCvs.map(cv => (
                 <label key={cv.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedCvs.includes(cv.id) ? 'border-primary bg-primary-light' : 'border-border hover:bg-bg-100'}`}>
                   <input type="checkbox" checked={selectedCvs.includes(cv.id)} onChange={() => toggleCV(cv.id)} className="accent-primary w-4 h-4" />
                   <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
@@ -121,7 +196,9 @@ export default function NewSessionPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-text-900 text-sm truncate">{cv.candidate_name || 'Candidat inconnu'}</p>
-                    {cv.email && <p className="text-xs text-text-400 truncate">{cv.email}</p>}
+                    {(cv.candidate_email || cv.email) && (
+                      <p className="text-xs text-text-400 truncate">{cv.candidate_email || cv.email}</p>
+                    )}
                   </div>
                 </label>
               ))}
