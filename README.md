@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rise Hire — RecruteIA Frontend
 
-## Getting Started
+> **Part of RecruteIA (FQIA PFF N°3).**
+> **Front-door repo (full docs + setup):** [yassjustice/RecruteIA-FQIA-PFF3](https://github.com/yassjustice/RecruteIA-FQIA-PFF3)
 
-First, run the development server:
+Next.js 14 frontend for the RecruteIA AI recruitment assistant. Connects to the
+[recruiteia-api](https://github.com/yassjustice/recruiteia-api) FastAPI backend.
+
+**Live:** https://rise-hire-frontend.vercel.app *(or current Vercel deployment URL)*
+
+---
+
+## 🚀 Run locally
 
 ```bash
+git clone https://github.com/yassjustice/rise-hire-frontend.git
+cd rise-hire-frontend
+
+npm install
+
+# (Optional) Create .env.local to point at a local backend:
+# NEXT_PUBLIC_API_URL=http://localhost:8000/api
+# If omitted, the app uses the live HF Space backend.
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Tech stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** Next.js 14 (App Router) + TypeScript
+- **Styling:** Tailwind CSS
+- **API client:** `lib/api.ts` — JSON envelope `{success, data}`, JWT in localStorage
+- **Cold-start UX:** `components/ui/ColdStartBanner.tsx` shows when API takes >5 s to respond
 
-## Learn More
+## 📋 Key routes
 
-To learn more about Next.js, take a look at the following resources:
+| Route | Purpose |
+|-------|---------|
+| `/login`, `/register` | Auth |
+| `/dashboard` | Overview stats |
+| `/offers`, `/offers/new`, `/offers/[id]` | Job offer management + Module 2 (JD analysis) |
+| `/cvs`, `/cvs/[id]` | CV upload + Module 1 (CV extraction) |
+| `/sessions/new`, `/sessions/[id]`, `/sessions/[id]/results` | Scoring session + Module 3 results |
+| `/account` | User profile |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔗 Related
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Backend API: [yassjustice/recruiteia-api](https://github.com/yassjustice/recruiteia-api)
+- Docs hub: [yassjustice/RecruteIA-FQIA-PFF3](https://github.com/yassjustice/RecruteIA-FQIA-PFF3)
