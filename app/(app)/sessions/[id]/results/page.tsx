@@ -56,6 +56,11 @@ export default function ResultsPage() {
   if (!results) return <div className="p-6 text-text-400 text-center">Résultats indisponibles</div>;
 
   const ranked = results.results?.sort((a, b) => (b.final_score_pct ?? 0) - (a.final_score_pct ?? 0)) ?? [];
+  const summary = results.summary ?? (ranked.length > 0 ? {
+    avg_score: ranked.reduce((s, r) => s + (r.final_score_pct ?? 0), 0) / ranked.length,
+    above_threshold: ranked.filter(r => (r.final_score_pct ?? 0) >= 80).length,
+    top_candidate: ranked[0]?.candidate_name || '—',
+  } : undefined);
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full">
@@ -76,33 +81,30 @@ export default function ResultsPage() {
           <Button variant="secondary" onClick={() => handleExport('csv')} loading={exporting === 'csv'}>
             📊 Export CSV
           </Button>
-          <Button variant="secondary" onClick={() => handleExport('pdf')} loading={exporting === 'pdf'}>
-            📄 Export PDF
-          </Button>
         </div>
       </div>
 
       {/* Summary bar */}
-      {results.summary && (
+      {summary && (
         <Card className="mb-6 flex flex-wrap gap-6">
-          {results.summary.avg_score !== undefined && (
+          {summary.avg_score !== undefined && (
             <div>
               <p className="text-xs text-text-400 uppercase tracking-wider">Score moyen</p>
-              <p className="text-2xl font-bold" style={{ color: getScoreColor(results.summary.avg_score / 100) }}>
-                {formatScore(results.summary.avg_score)}%
+              <p className="text-2xl font-bold" style={{ color: getScoreColor(summary.avg_score / 100) }}>
+                {formatScore(summary.avg_score)}%
               </p>
             </div>
           )}
-          {results.summary.above_threshold !== undefined && (
+          {summary.above_threshold !== undefined && (
             <div>
-              <p className="text-xs text-text-400 uppercase tracking-wider">Au-dessus du seuil</p>
-              <p className="text-2xl font-bold text-success">{results.summary.above_threshold}</p>
+              <p className="text-xs text-text-400 uppercase tracking-wider">Au-dessus du seuil (≥80%)</p>
+              <p className="text-2xl font-bold text-success">{summary.above_threshold}</p>
             </div>
           )}
-          {results.summary.top_candidate && (
+          {summary.top_candidate && (
             <div>
               <p className="text-xs text-text-400 uppercase tracking-wider">Meilleur candidat</p>
-              <p className="text-xl font-bold text-text-900">{results.summary.top_candidate}</p>
+              <p className="text-xl font-bold text-text-900">{summary.top_candidate}</p>
             </div>
           )}
         </Card>
