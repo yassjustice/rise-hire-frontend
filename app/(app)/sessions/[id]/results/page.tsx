@@ -113,6 +113,7 @@ export default function ResultsPage() {
               <th className="text-left px-4 py-3 font-medium">Statut</th>
               <th className="text-left px-4 py-3 font-medium">Points forts</th>
               <th className="text-left px-4 py-3 font-medium">Lacunes</th>
+              <th className="text-left px-4 py-3 font-medium w-24">Profil</th>
             </tr>
           </thead>
           <tbody>
@@ -123,7 +124,7 @@ export default function ResultsPage() {
                 <tr key={r.cv_id || i} className="border-b border-border last:border-0 hover:bg-bg-100 transition-colors align-top">
                   <td className="px-4 py-3 font-bold text-text-400">{rankBadge(i) || i + 1}</td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-text-900">{r.candidate_name || 'Candidat inconnu'}</p>
+                    <Link href={`/cvs/${r.cv_id}`} className="font-medium text-text-900 hover:text-primary hover:underline">{r.candidate_name || 'Candidat inconnu'}</Link>
                     {(r.candidate_email || r.email) && <p className="text-xs text-text-400">{r.candidate_email || r.email}</p>}
                   </td>
                   <td className="px-4 py-3">
@@ -149,6 +150,9 @@ export default function ResultsPage() {
                       {(r.missing_skills || []).slice(0, 3).map(s => <Tag key={s} skill={s} kind="bad" />)}
                       {(!r.missing_skills || r.missing_skills.length === 0) && <span className="text-xs text-text-300">—</span>}
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link href={`/cvs/${r.cv_id}`} className="text-xs text-primary font-medium hover:underline whitespace-nowrap">Voir le profil →</Link>
                   </td>
                 </tr>
               );

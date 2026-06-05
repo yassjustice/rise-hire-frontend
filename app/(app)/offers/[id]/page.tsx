@@ -3,12 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api, Offer } from '@/lib/api';
+import { api, Offer, Session } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { StatusBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/Spinner';
+import { formatDate } from '@/lib/utils';
 
 type RichOffer = Offer & {
   raw_text?: string;
@@ -20,6 +22,7 @@ type RichOffer = Offer & {
 export default function OfferDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [offer, setOffer] = useState<RichOffer | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -30,7 +33,14 @@ export default function OfferDetailPage() {
   const router = useRouter();
 
   const load = useCallback(async () => {
-    try { setOffer((await api.getOffer(id)) as RichOffer); }
+    try {
+      const [o, sess] = await Promise.all([
+        api.getOffer(id),
+        api.getSessions().catch(() => [] as Session[]),
+      ]);
+      setOffer(o as RichOffer);
+      setSessions((sess as Session[]).filter(s => s.offer_id === id || s.job_offer_id === id));
+    }
     catch { toast('Offre introuvable', 'error'); router.push('/offers'); }
     finally { setLoading(false); }
   }, [id, toast, router]);
@@ -135,6 +145,34 @@ export default function OfferDetailPage() {
             {description
               ? <p className="text-sm text-text-600 whitespace-pre-wrap leading-relaxed">{description}</p>
               : <p className="text-sm text-text-400">Aucune description enregistrée pour cette offre.</p>}
+          </Card>
+
+          {/* Sessions that used this offer */}
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="flex items-center gap-2 font-semibold text-text-900"><span>🔄</span> Sessions de scoring ({sessions.length})</h2>
+              <Link href={`/sessions/new?offerId=${offer.id}`} className="text-sm text-primary hover:underline">+ Nouvelle</Link>
+            </div>
+            {sessions.length === 0 ? (
+              <p className="text-sm text-text-400">Aucune session n&apos;a encore utilisé cette offre.</p>
+            ) : (
+              <div className="flex flex-col divide-y divide-border">
+                {sessions.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <Link href={`/sessions/${s.id}`} className="font-medium text-text-800 hover:text-primary truncate block">{s.name}</Link>
+                      <p className="text-xs text-text-400">{formatDate(s.created_at)} · {s.total_cvs ?? s.cv_count ?? 0} CV(s)</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <StatusBadge status={s.status} />
+                      {s.status === 'completed' && (
+                        <Link href={`/sessions/${s.id}/results`} className="text-xs text-primary font-medium hover:underline">Résultats →</Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
