@@ -54,6 +54,8 @@ export default function NewOfferPage() {
         title,
         company_name: company || '',
         company,
+        raw_text: jdText,
+        description: jdText,
         job_description: jdText,
       });
       toast('Offre créée avec succès !', 'success');
