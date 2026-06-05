@@ -60,7 +60,7 @@ export default function SessionsPage() {
                   <td className="px-4 py-3">
                     <Link href={`/sessions/${s.id}`} className="font-medium text-text-900 hover:text-primary">{s.name}</Link>
                   </td>
-                  <td className="px-4 py-3 text-text-500">{s.cv_count ?? '—'}</td>
+                  <td className="px-4 py-3 text-text-500">{s.total_cvs ?? s.cv_count ?? '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                   <td className="px-4 py-3 text-text-400">{formatDate(s.created_at)}</td>
                   <td className="px-4 py-3 text-right">

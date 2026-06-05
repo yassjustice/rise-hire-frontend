@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ThresholdBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/Spinner';
-import { formatScore, getScoreColor } from '@/lib/utils';
+import { getScoreColor } from '@/lib/utils';
 
 function Tag({ skill, kind }: { skill: string; kind: 'good' | 'bad' }) {
   const cls = kind === 'good'
@@ -94,7 +94,7 @@ export default function ResultsPage() {
       {ranked.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           <Card><p className="text-xs text-text-400 uppercase tracking-wider">Score moyen</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: getScoreColor(avg / 100) }}>{formatScore(avg)}%</p></Card>
+            <p className="text-2xl font-bold mt-1" style={{ color: getScoreColor(avg / 100) }}>{avg.toFixed(1)}%</p></Card>
           <Card><p className="text-xs text-text-400 uppercase tracking-wider">Recommandés (≥80%)</p>
             <p className="text-2xl font-bold text-success mt-1">{above}</p></Card>
           <Card><p className="text-xs text-text-400 uppercase tracking-wider">Meilleur candidat</p>

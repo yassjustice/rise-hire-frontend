@@ -104,7 +104,7 @@ export default function DashboardPage() {
                         </Link>
                         <p className="text-xs text-text-400 mt-0.5">{formatDate(s.created_at)}</p>
                       </td>
-                      <td className="px-4 py-3 text-text-500">{s.cv_count ?? '—'}</td>
+                      <td className="px-4 py-3 text-text-500">{s.total_cvs ?? s.cv_count ?? '—'}</td>
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                     </tr>
                   ))}

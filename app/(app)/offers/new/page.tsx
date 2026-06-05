@@ -34,6 +34,7 @@ export default function NewOfferPage() {
       const extracted = data as unknown as Record<string, unknown>;
       setExtracted(extracted);
       setTitle((extracted.job_title as string) || (extracted.title as string) || '');
+      setCompany((extracted.company_name as string) || (extracted.company as string) || '');
       setStep(2);
     } catch {
       toast('Erreur lors de l\'extraction — vérifiez la longueur du texte (max ~4000 tokens)', 'error');
