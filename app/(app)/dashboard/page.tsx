@@ -12,8 +12,8 @@ import { formatDate } from '@/lib/utils';
 
 function StatCard({ label, value, icon, sub }: { label: string; value: string | number; icon: string; sub?: string }) {
   return (
-    <Card className="flex items-center gap-4">
-      <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center text-2xl shrink-0">{icon}</div>
+    <Card className="flex items-center gap-4 hover:shadow-soft transition-shadow">
+      <div className="w-12 h-12 hero-gradient text-white rounded-xl flex items-center justify-center text-2xl shrink-0 shadow-sm">{icon}</div>
       <div>
         <p className="text-2xl font-bold text-text-900">{value}</p>
         <p className="text-sm text-text-500">{label}</p>
@@ -45,11 +45,11 @@ export default function DashboardPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto w-full">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-900">
+      <div className="hero-gradient text-white rounded-2xl p-6 mb-8 shadow-soft">
+        <h1 className="text-2xl font-bold">
           Bonjour, {user?.full_name?.split(' ')[0]} 👋
         </h1>
-        <p className="text-text-500 mt-1">Voici un aperçu de votre activité de recrutement</p>
+        <p className="text-white/80 mt-1">Voici un aperçu de votre activité de recrutement</p>
       </div>
 
       {/* Stats grid */}

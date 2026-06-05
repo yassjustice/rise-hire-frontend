@@ -5,7 +5,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-white">
+      <div className="hidden lg:flex flex-col justify-between w-1/2 hero-gradient p-12 text-white">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-3xl">🐦</span>
           <span className="text-2xl font-bold">Rise Hire</span>

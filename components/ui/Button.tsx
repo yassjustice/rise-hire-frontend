@@ -7,12 +7,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[.98]';
 
 const variants = {
-  primary: 'bg-primary text-white hover:bg-primary-dark focus:ring-primary',
-  secondary: 'bg-bg-50 text-text-700 border border-border hover:bg-bg-100 focus:ring-primary',
-  danger: 'bg-danger text-white hover:bg-red-700 focus:ring-danger',
+  primary: 'bg-gradient-to-br from-primary to-primary-dark text-white shadow-sm hover:shadow-md hover:brightness-110 focus:ring-primary',
+  secondary: 'bg-white text-text-700 border border-border hover:bg-bg-100 hover:border-text-300 focus:ring-primary',
+  danger: 'bg-danger text-white shadow-sm hover:bg-red-700 hover:shadow-md focus:ring-danger',
   ghost: 'text-primary hover:bg-primary-light focus:ring-primary',
 };
 

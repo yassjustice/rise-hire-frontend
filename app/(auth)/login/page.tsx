@@ -5,7 +5,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-white">
+      <div className="hidden lg:flex flex-col justify-between w-1/2 hero-gradient p-12 text-white">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-3xl">🐦</span>
           <span className="text-2xl font-bold">Rise Hire</span>
@@ -18,7 +18,7 @@ export default function LoginPage() {
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           {[['📄', 'Extraction CVs', 'NLP avancé'], ['📋', 'Analyse offres', 'Extraction auto'], ['🏆', 'Scoring IA', 'Classement précis']].map(([icon, title, sub]) => (
-            <div key={title} className="bg-white/10 rounded-xl p-4">
+            <div key={title} className="bg-white/10 backdrop-blur rounded-xl p-4 ring-1 ring-white/10">
               <div className="text-2xl mb-2">{icon}</div>
               <div className="font-semibold text-sm">{title}</div>
               <div className="text-xs text-white/60 mt-1">{sub}</div>

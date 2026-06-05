@@ -16,12 +16,12 @@ export function Sidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-r border-border">
+    <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white/80 backdrop-blur border-r border-border">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-border">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="text-2xl">🐦</span>
-          <span className="text-xl font-bold text-primary">Rise Hire</span>
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <span className="w-9 h-9 rounded-xl hero-gradient text-white flex items-center justify-center text-lg shadow-sm">🐦</span>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">Rise Hire</span>
         </Link>
       </div>
 
@@ -33,9 +33,9 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 active
-                  ? 'bg-primary-light text-primary'
+                  ? 'hero-gradient text-white shadow-sm'
                   : 'text-text-500 hover:bg-bg-50 hover:text-text-700'
               }`}
             >

@@ -43,7 +43,7 @@ export default function SessionsPage() {
           <Link href="/sessions/new"><Button>Lancer une session</Button></Link>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-border overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-bg-100">

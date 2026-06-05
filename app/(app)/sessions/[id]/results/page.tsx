@@ -103,7 +103,7 @@ export default function ResultsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-bg-100 text-text-500">

@@ -70,7 +70,7 @@ export default function AccountPage() {
       {/* Profile info */}
       <Card className="mb-6">
         <div className="flex items-center gap-5 mb-6">
-          <div className="w-16 h-16 rounded-full bg-primary-light text-primary flex items-center justify-center text-2xl font-bold shrink-0">
+          <div className="w-16 h-16 rounded-2xl hero-gradient text-white flex items-center justify-center text-2xl font-bold shrink-0 shadow-sm">
             {user?.full_name?.charAt(0)?.toUpperCase() || '?'}
           </div>
           <div>
