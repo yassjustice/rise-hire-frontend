@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { api, SessionResults } from '@/lib/api';
+import { api, SessionResults, ResultRow } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,19 +11,25 @@ import { ThresholdBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/Spinner';
 import { formatScore, getScoreColor } from '@/lib/utils';
 
-function MissingSkill({ skill }: { skill: string }) {
-  return <span className="bg-red-50 text-danger border border-red-200 text-xs px-2 py-0.5 rounded-full">{skill}</span>;
+function Tag({ skill, kind }: { skill: string; kind: 'good' | 'bad' }) {
+  const cls = kind === 'good'
+    ? 'bg-green-50 text-success border-green-200'
+    : 'bg-red-50 text-danger border-red-200';
+  return <span className={`text-xs px-2 py-0.5 rounded-full border ${cls}`}>{skill}</span>;
 }
 
-function StrengthSkill({ skill }: { skill: string }) {
-  return <span className="bg-green-50 text-success border border-green-200 text-xs px-2 py-0.5 rounded-full">{skill}</span>;
+function rankBadge(i: number) {
+  if (i === 0) return '🥇';
+  if (i === 1) return '🥈';
+  if (i === 2) return '🥉';
+  return null;
 }
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
   const [results, setResults] = useState<SessionResults | null>(null);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
+  const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
   const load = useCallback(async () => {
@@ -34,123 +40,119 @@ export default function ResultsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleExport = async (type: 'csv' | 'pdf') => {
-    setExporting(type);
+  const handleExport = async () => {
+    setExporting(true);
     try {
-      const blob = type === 'csv' ? await api.exportCSV(id) : await api.exportPDF(id);
+      const blob = await api.exportCSV(id);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `results-${id}.${type}`;
-      a.click();
+      a.href = url; a.download = `resultats-${id}.csv`; a.click();
       URL.revokeObjectURL(url);
-      toast(`Export ${type.toUpperCase()} téléchargé`, 'success');
-    } catch {
-      toast(`Erreur lors de l'export ${type.toUpperCase()}`, 'error');
-    } finally {
-      setExporting(null);
-    }
+      toast('Export CSV téléchargé', 'success');
+    } catch { toast("Erreur lors de l'export CSV", 'error'); }
+    finally { setExporting(false); }
   };
 
   if (loading) return <PageLoader />;
   if (!results) return <div className="p-6 text-text-400 text-center">Résultats indisponibles</div>;
 
-  const ranked = results.results?.sort((a, b) => (b.final_score_pct ?? 0) - (a.final_score_pct ?? 0)) ?? [];
-  const summary = results.summary ?? (ranked.length > 0 ? {
-    avg_score: ranked.reduce((s, r) => s + (r.final_score_pct ?? 0), 0) / ranked.length,
-    above_threshold: ranked.filter(r => (r.final_score_pct ?? 0) >= 80).length,
-    top_candidate: ranked[0]?.candidate_name || '—',
-  } : undefined);
+  // Sort by score, then de-duplicate identical candidates (same name + email)
+  const sorted = (results.results ?? []).slice().sort((a, b) => (b.final_score_pct ?? 0) - (a.final_score_pct ?? 0));
+  const seen = new Set<string>();
+  const ranked: ResultRow[] = [];
+  for (const r of sorted) {
+    const key = `${(r.candidate_name || '').toLowerCase().trim()}|${(r.candidate_email || r.email || '').toLowerCase().trim()}`;
+    const dedupeKey = r.candidate_name ? key : `id:${r.cv_id}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    ranked.push(r);
+  }
+
+  const avg = ranked.length ? ranked.reduce((s, r) => s + (r.final_score_pct ?? 0), 0) / ranked.length : 0;
+  const above = ranked.filter(r => (r.final_score_pct ?? 0) >= 80).length;
+  const top = ranked[0]?.candidate_name || '—';
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/sessions" className="text-text-400 hover:text-text-700">← Sessions</Link>
+      <div className="flex items-center gap-2 mb-5 text-sm">
+        <Link href="/sessions" className="text-text-400 hover:text-primary">← Sessions</Link>
         <span className="text-text-300">/</span>
-        <Link href={`/sessions/${id}`} className="text-text-400 hover:text-text-700">Session</Link>
+        <Link href={`/sessions/${id}`} className="text-text-400 hover:text-primary">Session</Link>
         <span className="text-text-300">/</span>
-        <span className="text-text-700">Résultats</span>
+        <span className="text-text-700 font-medium">Résultats</span>
       </div>
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-text-900">Résultats du scoring</h1>
-          <p className="text-text-500 mt-1">{ranked.length} candidats classés par score</p>
+          <p className="text-text-500 mt-1">{ranked.length} candidat{ranked.length > 1 ? 's' : ''} classé{ranked.length > 1 ? 's' : ''} par pertinence</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => handleExport('csv')} loading={exporting === 'csv'}>
-            📊 Export CSV
-          </Button>
-        </div>
+        <Button variant="secondary" onClick={handleExport} loading={exporting}>📊 Export CSV</Button>
       </div>
 
-      {/* Summary bar */}
-      {summary && (
-        <Card className="mb-6 flex flex-wrap gap-6">
-          {summary.avg_score !== undefined && (
-            <div>
-              <p className="text-xs text-text-400 uppercase tracking-wider">Score moyen</p>
-              <p className="text-2xl font-bold" style={{ color: getScoreColor(summary.avg_score / 100) }}>
-                {formatScore(summary.avg_score)}%
-              </p>
-            </div>
-          )}
-          {summary.above_threshold !== undefined && (
-            <div>
-              <p className="text-xs text-text-400 uppercase tracking-wider">Au-dessus du seuil (≥80%)</p>
-              <p className="text-2xl font-bold text-success">{summary.above_threshold}</p>
-            </div>
-          )}
-          {summary.top_candidate && (
-            <div>
-              <p className="text-xs text-text-400 uppercase tracking-wider">Meilleur candidat</p>
-              <p className="text-xl font-bold text-text-900">{summary.top_candidate}</p>
-            </div>
-          )}
-        </Card>
+      {/* Summary */}
+      {ranked.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card><p className="text-xs text-text-400 uppercase tracking-wider">Score moyen</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: getScoreColor(avg / 100) }}>{formatScore(avg)}%</p></Card>
+          <Card><p className="text-xs text-text-400 uppercase tracking-wider">Recommandés (≥80%)</p>
+            <p className="text-2xl font-bold text-success mt-1">{above}</p></Card>
+          <Card><p className="text-xs text-text-400 uppercase tracking-wider">Meilleur candidat</p>
+            <p className="text-lg font-bold text-text-900 mt-1 truncate">{top}</p></Card>
+        </div>
       )}
 
-      {/* Results table */}
+      {/* Table */}
       <div className="bg-white rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-bg-100">
-              <th className="text-left px-4 py-3 font-medium text-text-500 w-8">#</th>
-              <th className="text-left px-4 py-3 font-medium text-text-500">Candidat</th>
-              <th className="text-left px-4 py-3 font-medium text-text-500">Score final</th>
-              <th className="text-left px-4 py-3 font-medium text-text-500">Statut</th>
-              <th className="text-left px-4 py-3 font-medium text-text-500">Points forts</th>
-              <th className="text-left px-4 py-3 font-medium text-text-500">Lacunes</th>
+            <tr className="border-b border-border bg-bg-100 text-text-500">
+              <th className="text-left px-4 py-3 font-medium w-12">#</th>
+              <th className="text-left px-4 py-3 font-medium">Candidat</th>
+              <th className="text-left px-4 py-3 font-medium w-48">Score</th>
+              <th className="text-left px-4 py-3 font-medium">Statut</th>
+              <th className="text-left px-4 py-3 font-medium">Points forts</th>
+              <th className="text-left px-4 py-3 font-medium">Lacunes</th>
             </tr>
           </thead>
           <tbody>
-            {ranked.map((r, i) => (
-              <tr key={r.cv_id || i} className="border-b border-border last:border-0 hover:bg-bg-100 transition-colors align-top">
-                <td className="px-4 py-3 font-bold text-text-400">{i + 1}</td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-text-900">{r.candidate_name || 'Inconnu'}</p>
-                  {r.email && <p className="text-xs text-text-400">{r.email}</p>}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-lg font-bold" style={{ color: getScoreColor((r.final_score_pct ?? 0) / 100) }}>
-                    {r.final_score_pct !== undefined ? `${r.final_score_pct.toFixed(1)}%` : '—'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <ThresholdBadge threshold={r.threshold || (r.final_score_pct >= 80 ? 'green' : r.final_score_pct >= 50 ? 'orange' : 'red')} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {(r.strengths || []).slice(0, 3).map(s => <StrengthSkill key={s} skill={s} />)}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {(r.missing_skills || []).slice(0, 3).map(s => <MissingSkill key={s} skill={s} />)}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {ranked.map((r, i) => {
+              const pct = r.final_score_pct ?? 0;
+              const color = getScoreColor(pct / 100);
+              return (
+                <tr key={r.cv_id || i} className="border-b border-border last:border-0 hover:bg-bg-100 transition-colors align-top">
+                  <td className="px-4 py-3 font-bold text-text-400">{rankBadge(i) || i + 1}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-text-900">{r.candidate_name || 'Candidat inconnu'}</p>
+                    {(r.candidate_email || r.email) && <p className="text-xs text-text-400">{r.candidate_email || r.email}</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold tabular-nums" style={{ color }}>{pct.toFixed(1)}%</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 w-full rounded-full bg-bg-50 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, pct)}%`, backgroundColor: color }} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <ThresholdBadge threshold={r.threshold || (pct >= 80 ? 'green' : pct >= 50 ? 'orange' : 'red')} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(r.strengths && r.strengths.length > 0)
+                        ? r.strengths.slice(0, 3).map(s => <Tag key={s} skill={s} kind="good" />)
+                        : (r.matched_skills || []).slice(0, 3).map(s => <Tag key={s} skill={s} kind="good" />)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(r.missing_skills || []).slice(0, 3).map(s => <Tag key={s} skill={s} kind="bad" />)}
+                      {(!r.missing_skills || r.missing_skills.length === 0) && <span className="text-xs text-text-300">—</span>}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
